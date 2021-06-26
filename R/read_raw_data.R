@@ -1,10 +1,10 @@
 #' Read data
 #'
-#' Read raw training & test data of food demand provided
+#' Read raw Training & test data of food demand provided
 #' by AnalyticsVidhya.
 #'
-#' @param train_raw_path The location of train csv file.
-#' @param test_raw_path The location of test csv file.
+#' @param train_raw_path The location of train .csv file.
+#' @param test_raw_path The location of test .csv file.
 #' @param meal_info_path The location of meal master csv file.
 #'
 #' @returns
