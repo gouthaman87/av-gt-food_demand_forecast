@@ -1,3 +1,12 @@
 utils::globalVariables(
-  c("center_id", "meal_id", "id", "week", "num_orders", "end")
+  c(
+    "center_id",
+    "meal_id",
+    "id",
+    "week",
+    "num_orders",
+    "end",
+    "week_no",
+    "dummy_orders"
+  )
 )
