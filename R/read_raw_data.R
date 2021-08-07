@@ -23,26 +23,19 @@
 read_raw_data <- function(train_raw_path = as.character(),
                           test_raw_path = as.character(),
                           meal_info_path = as.character()) {
-  tryCatch(
-    {
-      # Read training data
-      train_data <- data.table::fread(train_raw_path)
+  # Read training data
+  train_data <- data.table::fread(train_raw_path)
 
-      # Read test data
-      test_data <- data.table::fread(test_raw_path)
+  # Read test data
+  test_data <- data.table::fread(test_raw_path)
 
-      # Read meal info data
-      meal_data <- data.table::fread(meal_info_path)
+  # Read meal info data
+  meal_data <- data.table::fread(meal_info_path)
 
-      # Join meal info to data
-      list(
-        "train_data" = train_data,
-        "test_data" = test_data
-      ) %>%
-        purrr::map(~dplyr::left_join(.x, meal_data, by = "meal_id"))
-    },
-    error = function(e) {
-      logger::log_error("Exception in read_raw_data()")
-    }
-  )
+  # Join meal info to data
+  list(
+    "train_data" = train_data,
+    "test_data" = test_data
+  ) %>%
+    purrr::map(~dplyr::left_join(.x, meal_data, by = "meal_id"))
 }

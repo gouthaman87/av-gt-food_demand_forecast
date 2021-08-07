@@ -14,7 +14,6 @@ LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 Imports: 
-    data.table (>= 1.14.0),
     dplyr (>= 1.0.6),
     logger (>= 0.2.0),
     magrittr (>= 2.0.1),
@@ -33,5 +32,6 @@ Imports:
     workflows (>= 0.2.2),
     workflowsets (>= 0.0.2)
 Suggests: 
+    data.table (>= 1.14.0),
     testthat (>= 3.0.0)
 Config/testthat/edition: 3

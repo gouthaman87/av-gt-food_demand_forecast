@@ -1,12 +1,18 @@
-#' Title
+#' Create Time Series features
 #'
-#' @param data
+#' This function creates following features for given weekly data:
+#' weekly seasonal features (month, year, week, etc.) and 10th lag feature.
 #'
-#' @return
+#' @param data The long transaction data from `separate_long_short` function.
+#'
+#' @return The features added transaction data.
 #' @export
 #'
 #' @examples
-create_ts_features <- function(data) {
+#' \dontrun{
+#' feature_data = create_ts_features(data = data_list[["long_ts"]])
+#' }
+create_ts_features <- function(data = tibble::as.tibble()) {
   logger::log_info("Running create_ts_feature()")
 
   # Split the data

@@ -29,8 +29,6 @@ fit_xgboost <- function(ts_splits,
   )
 
   # 4.0 Train XGBoost with
-  modeltime::parallel_start(2)
-
   xgb_parallel_tbl <- xgb_workflow %>%
     modeltime::modeltime_fit_workflowset(
       data    = rsample::training(ts_splits),
@@ -40,26 +38,34 @@ fit_xgboost <- function(ts_splits,
       )
     )
 
-  return(xgb_parallel_tbl)
+  # 5.0 Accuracy calculation
+  xgb_best_model <- xgb_parallel_tbl %>%
+    modeltime::modeltime_calibrate(rsample::testing(ts_splits)) %>%
+    modeltime::modeltime_accuracy() %>%
+    dplyr::filter(rmse == min(rmse))
 
-  modeltime::parallel_stop()
+  model_id <- dplyr::pull(xgb_best_model, .model_id)
 
-  # 5.0 Log Hyperparameters & RMSE metric in MLFlow
-  mlflow::mlflow_set_experiment(experiment_name = "food_forecast")
+  rmse <- dplyr::pull(xgb_best_model, rmse)
 
-  with(mlflow::mlflow_start_run(), {
-    for(i in seq_along(xgb_parallel_tbl$.model)) {
-      spec <- workflows::pull_workflow_spec(xgb_parallel_tbl$.model[[i]])
-      parameter_names <- names(spec$args)
-      parameter_values <- lapply(spec$args, rlang::get_expr)
+  # 6.0 Log Hyperparameters & RMSE metric in MLFlow
+  logger::log_info("Tracking in MLFlow")
 
-      for (j in seq_along(spec$args)) {
-        parameter_name <- parameter_names[[j]]
-        parameter_value <- parameter_values[[j]]
-        if (!is.null(parameter_value)) {
-          mlflow::mlflow_log_param(parameter_name, parameter_value)
-        }
+  mlflow::mlflow_create_experiment("food_forecast")
+
+  spec <- workflows::pull_workflow_spec(xgb_parallel_tbl$.model[[model_id]])
+  parameter_names <- names(spec$args)
+  parameter_values <- lapply(spec$args, rlang::get_expr)
+
+  with(mlflow::mlflow_start_run(experiment_id = 1), {
+    for (j in seq_along(spec$args)) {
+      parameter_name <- parameter_names[[j]]
+      parameter_value <- parameter_values[[j]]
+      if (!is.null(parameter_value)) {
+        mlflow::mlflow_log_param(parameter_name, parameter_value)
       }
     }
+
+    mlflow::mlflow_log_metric("rmse", rmse)
   })
 }

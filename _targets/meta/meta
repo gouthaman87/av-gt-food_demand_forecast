@@ -1,0 +1,14 @@
+name|type|data|command|depend|seed|path|time|size|bytes|format|iteration|parent|children|seconds|warnings|error
+test_raw_path|stem|ef53ff0ec09c2051|71e93468f3cc0eb3|ef46db3751d8e999|1843513896|inst/extdata/test_QoiMO9B.csv|t18620.6715358796s|6616e30d3fc3fb20|1239576|file|vector|||1.891||
+train_raw_path|stem|713d3445f4f1c5c1|a463e7d57de264ec|ef46db3751d8e999|1190738313|inst/extdata/train.csv|t17879.6490972222s|48be067cdf9df9bc|18733819|file|vector|||0.001||
+data_list|stem|8f8c8f8483a52b87|a7ed8414fe7a361d|7b6892f76c7cb699|-1077046627||t18812.4468902823s|1641a891f3dfffb8|4059221|rds|vector|||1.847||
+long_short_data_list|stem|a179b8489b063318|484b6dc373799919|ccf9bd6d4674c9c5|-448512044||t18812.4635182981s|455ec7444a476c01|3841879|rds|vector|||7.432||
+.__global__|object|0c3f721cc0a7fe56||||||||||||||
+create_recipe|function|1aae9d0bcf0a813b||||||||||||||
+read_raw_data|function|7b191f3f1597f21d||||||||||||||
+fit_xgboost|function|3f04c9a0c0326c83||||||||||||||
+create_ts_features|function|16800c4a4b606cc9||||||||||||||
+r_functions|object|894c3417c4da43de||||||||||||||
+separate_long_short|function|ca4f40b3137dd6c3||||||||||||||
+meal_info_path|stem|a231be4784d71da4|0d0f2813f129783f|ef46db3751d8e999|1775947185|inst/extdata/meal_info.csv|t17878.5934027778s|2586203e115fc78a|1096|file|vector|||0.001||
+features_data|stem|13e8d9a768643209|18ed2b8df53d6644|c71257552402c5e4|-1070525831||t18812.5473396329s|f84de31767fea433|4721466|rds|vector|||44.606||

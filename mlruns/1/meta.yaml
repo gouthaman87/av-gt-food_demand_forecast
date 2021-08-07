@@ -1,0 +1,4 @@
+artifact_location: /Volumes/Data Science/Data Science Projects/FoodDemandApp/mlruns/1
+experiment_id: '1'
+lifecycle_stage: active
+name: food_forecast
