@@ -3,3 +3,5 @@
 .RData
 .Ruserdata
 inst/extdata
+_targets/
+git_token.txt
