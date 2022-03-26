@@ -7,7 +7,7 @@ sapply(r_functions, source)
 options(tidyverse.quiet = TRUE)
 
 tar_option_set(
-  packages = c("tidyverse", "tidymodels")
+  packages = c("h2oparsnip", "treesnip", "modeltime.gluonts")
 )
 
 list(
@@ -40,15 +40,24 @@ list(
     )
   ),
 
-  # 3.0 Separate data into long/short ----
+  # 3.0 Initialize Data ----
   targets::tar_target(
-    long_short_data_list,
-    separate_long_short(data_list = data_list)
+    complete_data,
+    data_prepare(data_list = data_list)
   ),
 
-  # 4.0 Create Time Series features ----
+  # 4.0 Run Test Data Forecast ----
   targets::tar_target(
-    features_data,
-    create_ts_features(data = long_short_data_list[["long_ts"]])
+    test_results,
+    meal_forecast(
+      DF = complete_data[["master_data"]],
+      model_name = c("deepar")
+      # model_name = "h2o_rf"
+    )
   )
 )
+
+# # Launch the app in a background process.
+# # You may need to refresh the browser if the app is slow to start.
+# # The graph automatically refreshes every 10 seconds
+# tar_watch(seconds = 10, outdated = FALSE, targets_only = TRUE)

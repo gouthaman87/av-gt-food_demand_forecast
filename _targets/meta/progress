@@ -1,3 +1,8 @@
 name|type|parent|branches|progress
-features_data|stem|features_data|0|started
-features_data|stem|features_data|0|built
+test_raw_path|stem|test_raw_path|0|skipped
+meal_info_path|stem|meal_info_path|0|skipped
+train_raw_path|stem|train_raw_path|0|skipped
+data_list|stem|data_list|0|skipped
+complete_data|stem|complete_data|0|skipped
+test_results|stem|test_results|0|started
+test_results|stem|test_results|0|built

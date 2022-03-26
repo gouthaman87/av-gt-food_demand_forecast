@@ -1,0 +1,198 @@
+---
+title: "Food Demand Analysis"
+author: "Gouthaman Tharmathasan"
+output: html_document
+runtime: shiny
+resource_files:
+  - R/model_workflow.R
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo=FALSE, include=FALSE}
+library(patchwork)
+r_functions <- list.files(path = "R", full.names = TRUE)
+sapply(r_functions, source)
+```
+
+This R Markdown document is create to check Food Demand Forecast.
+
+## Read Data & Transform
+```{r read data, echo=FALSE, include=FALSE}
+targets::tar_load(c("complete_data", "test_results"))
+
+master_data <- complete_data[["master_data"]]
+
+modeltime_table <- test_results[["modeltime_table"]]
+
+test_results <- test_results[["test_results"]]
+
+statistics_fcast <- list.files(
+  "./inst/extdata/statistics",
+  pattern = "_tbl.csv",
+  full.names = TRUE
+) |> 
+  purrr::map_dfr(~readr::read_csv(.x, show_col_types = FALSE))
+
+rm(complete_data)
+gc()
+
+meal_id <- unique(master_data$meal_id)
+
+center_id <- unique(master_data$center_id)
+```
+
+```{r transform data, echo=FALSE}
+master_data <- master_data |> 
+  dplyr::mutate(year = lubridate::year(date), week = lubridate::week(date))
+
+statistics_fcast <- statistics_fcast |> 
+  dplyr::mutate(
+    year = lubridate::year(week_date), 
+    week = lubridate::week(week_date)
+  ) |> 
+  
+  # Join Actual for Statistics Forecast 
+  dplyr::left_join(
+    master_data |>
+      dplyr::select(week, year, meal_id, center_id, num_orders, date),
+    by = c("week", "year", "meal_id", "center_id")
+  ) |> 
+  dplyr::filter(!is.na(fc_qty)) |>
+
+  dplyr::transmute(
+    date,
+    week,
+    year,
+    meal_id,
+    center_id,
+    .model_desc = .model,
+    .value = fc_qty,
+    num_orders
+  ) 
+
+statistics_accuracy_tbl <- statistics_fcast |> 
+  accuracy_metric() |> 
+  dplyr::group_by(meal_id, center_id) |> 
+  dplyr::filter(accuracy_rmsle == min(accuracy_rmsle)) |> 
+  dplyr::select(-accuracy_rmsle)
+
+test_results <- statistics_fcast |> 
+  dplyr::inner_join(statistics_accuracy_tbl, by = colnames(statistics_accuracy_tbl)) |> 
+  dplyr::mutate(.model_desc = "Statistics") |> 
+  dplyr::bind_rows(test_results)
+
+common_items <- test_results |> 
+  dplyr::distinct(.model_desc, center_id, meal_id, idx = 1) |> 
+  tidyr::pivot_wider(
+    id_cols = dplyr::ends_with("_id"), 
+    values_from = idx,
+    names_from = .model_desc
+  ) |> 
+  tidyr::drop_na() |> 
+  dplyr::select(dplyr::ends_with("_id"))
+
+accuracy_tbl <- test_results |>
+  accuracy_metric() |>
+  dplyr::inner_join(common_items, colnames(common_items)) |> 
+  dplyr::mutate(
+    .model_desc = stringr::str_replace(.model_desc, "RECIPE_", ""),
+    accuracy_rmsle = round(accuracy_rmsle, 2)
+  )
+
+model_accuracy <- accuracy_tbl |>
+  dplyr::left_join(
+    master_data |>
+      dplyr::distinct(center_id, meal_id, base_price),
+    by = c("center_id", "meal_id")
+  ) |>
+  dplyr::with_groups(
+    .model_desc,
+    dplyr::summarise,
+    WRMSLE = round(weighted.mean(accuracy_rmsle, base_price), 2)
+  )
+
+master_data <- master_data |>
+  dplyr::mutate(.model_desc = "Actual", .value = num_orders) |>
+  dplyr::select(dplyr::all_of(colnames(test_results))) |>
+  dplyr::bind_rows(test_results)
+```
+
+```{r raw data viz, echo=FALSE}
+inputPanel(
+  selectInput("meal_id", label = "Meal ID", choices = meal_id),
+  
+  selectInput("center_id", label = "Center ID", choices = center_id)
+)
+
+# plotly::renderPlotly({
+#   master_data |>
+#     dplyr::filter(center_id == input$center_id, meal_id == input$meal_id) |>
+#     timetk::plot_time_series(.date_var = date, .value = num_orders, .smooth = FALSE)
+# })
+```
+
+## Accuracy Table
+```{r meal accuracy metric, echo=FALSE}
+DT::renderDataTable(
+  accuracy_tbl |>
+    tidyr::pivot_wider(
+      dplyr::ends_with("_id"),
+      values_from = accuracy_rmsle,
+      names_from = .model_desc
+    ) |>
+    DT::datatable(
+      class = 'cell-border stripe',
+      rownames = FALSE
+    )
+)
+```
+
+```{r model accuracy, echo=FALSE}
+DT::renderDataTable(
+  model_accuracy |>
+    DT::datatable(
+      class = 'cell-border stripe',
+      rownames = FALSE
+    )
+)
+```
+
+## After Forecast
+```{r forecast plot, echo=FALSE}
+plotly::renderPlotly({
+  master_data |>
+    dplyr::filter(center_id == input$center_id, meal_id == input$meal_id) |>
+    timetk::plot_time_series(
+      .date_var = date,
+      .value = .value,
+      .smooth = FALSE,
+      .color_var = .model_desc
+    )
+})
+```
+
+## Variable Importance
+```{r vip, echo=FALSE, warning=FALSE, message=FALSE}
+
+# plt <- modeltime_table$.model_desc |>
+#   purrr::map2(
+#     .y = modeltime_table$.model_id,
+#     ~{
+#       mdl <- modeltime_table |>
+#         modeltime::pull_modeltime_model(.y)
+# 
+#       vip::vip(mdl$fit$fit) +
+#         ggplot2::theme_minimal() +
+#         ggplot2::labs(title = stringr::str_replace(.x, "RECIPE_", ""))
+#     }
+#   )
+# 
+# renderPlot(plt[[1]] + plt[[2]])
+```
+
+
+
+

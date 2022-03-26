@@ -30,10 +30,3 @@ test_data: The data.table of test data.
 Read raw Training & test data of food demand provided
 by AnalyticsVidhya.
 }
-\examples{
-data_list = read_raw_data(
-     train_raw_path = "inst/extdata/train.csv",
-     test_raw_path = "inst/extdata/test_QoiMO9B.csv",
-     meal_info_path = "inst/extdata/meal_info.csv"
-)
-}

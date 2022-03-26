@@ -1,12 +1,20 @@
 utils::globalVariables(
   c(
+    ".model_desc",
+    ".value",
+
     "center_id",
-    "meal_id",
-    "id",
-    "week",
-    "num_orders",
+    "checkout_price",
+    "cuisine",
+
     "end",
-    "week_no",
-    "dummy_orders"
+
+    "id",
+
+    "meal_id",
+
+    "num_orders",
+
+    "week"
   )
 )
