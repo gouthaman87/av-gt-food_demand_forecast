@@ -4,5 +4,4 @@ meal_info_path|stem|meal_info_path|0|skipped
 train_raw_path|stem|train_raw_path|0|skipped
 data_list|stem|data_list|0|skipped
 complete_data|stem|complete_data|0|skipped
-test_results|stem|test_results|0|started
-test_results|stem|test_results|0|built
+test_results|stem|test_results|0|skipped

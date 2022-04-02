@@ -40,6 +40,14 @@ plot_forecast <- function(
 }
 
 
+#' Title
+#'
+#' @param ...
+#'
+#' @return
+#' @export
+#'
+#' @examples
 ggplot_imp <- function(...) {
   obj <- list(...)
   metric_name <- attr(obj[[1]], "loss_name")
@@ -97,4 +105,36 @@ ggplot_imp <- function(...) {
       fill = NULL,
       color = NULL
     )
+}
+
+
+create_report <- function(DF = is.data.frame()) {
+
+  DF <- DF |>
+    dplyr::distinct(ts_id, .model_desc, idx = 1) |>
+    tidyr::pivot_wider(ts_id, names_from = .model_desc, values_from = idx)
+
+  # * Total Item ----
+  N = nrow(DF)
+
+  # * Statistics Item ----
+  S = sum(DF$Statistics, na.rm = TRUE)
+
+  # * ML Item ----
+  M = DF |>
+    dplyr::filter_at(dplyr::vars(dplyr::matches("recipe")), ~.x == 1) |>
+    nrow()
+
+  common_item <- DF |>
+    dplyr::filter_at(
+      dplyr::vars(dplyr::matches("Statistics|recipe")), ~.x == 1
+    ) |>
+    dplyr::select(-dplyr::matches("Statistics|recipe"))
+
+  list(
+    N = N,
+    S = S,
+    M = M,
+    common_item = common_item
+  )
 }
