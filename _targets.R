@@ -51,8 +51,7 @@ list(
     test_results,
     meal_forecast(
       DF = complete_data[["master_data"]],
-      model_name = c("deepar")
-      # model_name = "h2o_rf"
+      model_name = c("h2o_gbm", "h2o_rf", "lgbm")
     )
   )
 )

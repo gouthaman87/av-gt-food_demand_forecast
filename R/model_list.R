@@ -19,8 +19,10 @@ ml_h2o_rf <- function(){
       "h2o",
       # histogram_type = "Random"
       # stopping_metric = "RMSE",
-      # categorical_encoding = "SortByResponse"
-      categorical_encoding = "OneHotExplicit"
+      distribution = "tweedie",
+      # tweedie_power = 1.99,
+      categorical_encoding = "SortByResponse"
+      # categorical_encoding = "OneHotExplicit"
     )
 }
 
@@ -44,32 +46,32 @@ ml_h2o_gbm <- function(){
       # stopping_metric = "RMSE",
       categorical_encoding = "SortByResponse",
       distribution = "tweedie",
-      histogram_type = "RoundRobin",
+      # histogram_type = "RoundRobin",
       tweedie_power = 1.99
     )
 }
 
-# Tidymodel Models --------------------------------------------------------
-
-#' Stan Regression
+#' # Tidymodel Models --------------------------------------------------------
 #'
-#' @return model
-#' @export
-ml_stan <- function(){
-  parsnip::linear_reg(mode = "regression") |>
-    parsnip::set_engine("stan")
-}
-
-#' Decision Tree
+#' #' Stan Regression
+#' #'
+#' #' @return model
+#' #' @export
+#' ml_stan <- function(){
+#'   parsnip::linear_reg(mode = "regression") |>
+#'     parsnip::set_engine("stan")
+#' }
 #'
-#' @return model
-#' @export
-ml_dt <- function(){
-  parsnip::decision_tree(mode = "regression") |>
-    parsnip::set_engine("rpart")
-}
-
-
+#' #' Decision Tree
+#' #'
+#' #' @return model
+#' #' @export
+#' ml_dt <- function(){
+#'   parsnip::decision_tree(mode = "regression") |>
+#'     parsnip::set_engine("rpart")
+#' }
+#'
+#'
 # Boost Models ------------------------------------------------------------
 
 #' LightGBM
@@ -93,56 +95,56 @@ ml_lgbm <- function(){
     )
 }
 
-#' catBoost
+#' #' catBoost
+#' #'
+#' #' @return model
+#' #' @export
+#' ml_catboost <- function(){
+#'   parsnip::boost_tree(
+#'     mode = "regression"
+#'     # mtry = tune::tune()
+#'   ) |>
+#'     parsnip::set_engine("catboost")
+#' }
 #'
-#' @return model
-#' @export
-ml_catboost <- function(){
-  parsnip::boost_tree(
-    mode = "regression"
-    # mtry = tune::tune()
-  ) |>
-    parsnip::set_engine("catboost")
-}
-
-#' LightGBM
+#' #' LightGBM
+#' #'
+#' #' @return model
+#' #' @export
+#' ml_xgb <- function(){
+#'   parsnip::boost_tree(
+#'     mode = "regression",
+#'     # tree_depth = tune::tune(),
+#'     # learn_rate = tune::tune(),
+#'     # loss_reduction = tune::tune(),
+#'     # min_n = tune::tune(),
+#'     # sample_size = tune::tune(),
+#'     # trees = tune::tune()
+#'     # mtry = tune::tune()
+#'   ) |>
+#'     parsnip::set_engine(
+#'       "xgboost",
+#'       objective = "reg:tweedie",
+#'       tweedie_variance_power = 1.99
+#'     )
+#' }
 #'
-#' @return model
-#' @export
-ml_xgb <- function(){
-  parsnip::boost_tree(
-    mode = "regression",
-    # tree_depth = tune::tune(),
-    # learn_rate = tune::tune(),
-    # loss_reduction = tune::tune(),
-    # min_n = tune::tune(),
-    # sample_size = tune::tune(),
-    # trees = tune::tune()
-    # mtry = tune::tune()
-  ) |>
-    parsnip::set_engine(
-      "xgboost",
-      objective = "reg:tweedie",
-      tweedie_variance_power = 1.99
-    )
-}
-
-
-# DeepLearning Models -----------------------------------------------------
-
-#' DeepAR
 #'
-#' @return model
-#' @export
-ml_deepar <- function(){
-  modeltime.gluonts::deep_ar(
-    id = "ts_id",
-    freq = "W",
-    prediction_length = 10
-
-    # # Hyper Parameters
-    # epochs = 1,
-    # num_batches_per_epoch = 4
-  ) |>
-    parsnip::set_engine("gluonts_deepar")
-}
+#' # DeepLearning Models -----------------------------------------------------
+#'
+#' #' DeepAR
+#' #'
+#' #' @return model
+#' #' @export
+#' ml_deepar <- function(){
+#'   modeltime.gluonts::deep_ar(
+#'     id = "ts_id",
+#'     freq = "W",
+#'     prediction_length = 10
+#'
+#'     # # Hyper Parameters
+#'     # epochs = 1,
+#'     # num_batches_per_epoch = 4
+#'   ) |>
+#'     parsnip::set_engine("gluonts_deepar")
+#' }

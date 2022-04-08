@@ -1,0 +1,9 @@
+features:
+  - date
+  - center_id
+  - meal_id
+  - checkout_price
+  - emailer_for_promotion
+  - homepage_featured
+  - category
+  - cuisine

@@ -122,6 +122,19 @@
         "lattice"
       ]
     },
+    "MatrixExtra": {
+      "Package": "MatrixExtra",
+      "Version": "0.1.9-1",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "06ca6c362c5fbab2f7fa18219dc6ddf1",
+      "Requirements": [
+        "Matrix",
+        "Rcpp",
+        "RhpcBLASctl",
+        "float"
+      ]
+    },
     "MatrixModels": {
       "Package": "MatrixModels",
       "Version": "0.5-0",
@@ -223,12 +236,28 @@
         "Rcpp"
       ]
     },
+    "RhpcBLASctl": {
+      "Package": "RhpcBLASctl",
+      "Version": "0.21-247.1",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "e0d1744b1339290bce02b1699230b8b5",
+      "Requirements": []
+    },
     "SQUAREM": {
       "Package": "SQUAREM",
       "Version": "2021.1",
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "0cf10dab0d023d5b46a5a14387556891",
+      "Requirements": []
+    },
+    "SnowballC": {
+      "Package": "SnowballC",
+      "Version": "0.7.0",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "bc26e07c0d747fd287c370fe355e7b85",
       "Requirements": []
     },
     "SparseM": {
@@ -1025,6 +1054,14 @@
         "tsibble",
         "vctrs"
       ]
+    },
+    "float": {
+      "Package": "float",
+      "Version": "0.2-6.1",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "83d684a7da5071f469f776568d140586",
+      "Requirements": []
     },
     "fontawesome": {
       "Package": "fontawesome",
@@ -1939,6 +1976,16 @@
       "Hash": "d908914ae53b04d4c0c0fd72ecc35370",
       "Requirements": []
     },
+    "lgr": {
+      "Package": "lgr",
+      "Version": "0.4.3",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "788c0274bdcb794f0021e0a6d4fba2dc",
+      "Requirements": [
+        "R6"
+      ]
+    },
     "lhs": {
       "Package": "lhs",
       "Version": "1.1.5",
@@ -2127,6 +2174,17 @@
       "Hash": "eaee7d2a6f3ed4491df868611cb064cc",
       "Requirements": [
         "Rcpp"
+      ]
+    },
+    "mlapi": {
+      "Package": "mlapi",
+      "Version": "0.1.0",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "264a15aa9f96be8bb52edc2b9fb9876a",
+      "Requirements": [
+        "Matrix",
+        "R6"
       ]
     },
     "modelStudio": {
@@ -3015,6 +3073,23 @@
         "yaml"
       ]
     },
+    "rsparse": {
+      "Package": "rsparse",
+      "Version": "0.5.0",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "379f2a775e3ed4d560162262615a5bc4",
+      "Requirements": [
+        "Matrix",
+        "MatrixExtra",
+        "Rcpp",
+        "RcppArmadillo",
+        "RhpcBLASctl",
+        "data.table",
+        "float",
+        "lgr"
+      ]
+    },
     "rstan": {
       "Package": "rstan",
       "Version": "2.21.3",
@@ -3511,6 +3586,48 @@
         "httr"
       ]
     },
+    "text2vec": {
+      "Package": "text2vec",
+      "Version": "0.6",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "4dd6c4ff3bd5be6bdd50793f37179450",
+      "Requirements": [
+        "Matrix",
+        "R6",
+        "Rcpp",
+        "data.table",
+        "digest",
+        "lgr",
+        "mlapi",
+        "rsparse",
+        "stringi"
+      ]
+    },
+    "textrecipes": {
+      "Package": "textrecipes",
+      "Version": "0.5.1",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "c4e3d8256129e77a6531aa76d2f11054",
+      "Requirements": [
+        "Matrix",
+        "Rcpp",
+        "SnowballC",
+        "dplyr",
+        "generics",
+        "glue",
+        "lifecycle",
+        "magrittr",
+        "purrr",
+        "recipes",
+        "rlang",
+        "tibble",
+        "tidyr",
+        "tokenizers",
+        "vctrs"
+      ]
+    },
     "threejs": {
       "Package": "threejs",
       "Version": "0.3.3",
@@ -3694,6 +3811,18 @@
       "Hash": "759d047596ac173433985deddf313450",
       "Requirements": [
         "xfun"
+      ]
+    },
+    "tokenizers": {
+      "Package": "tokenizers",
+      "Version": "0.2.1",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Hash": "a064f646b3a692e62dfb5d9ea690a4ea",
+      "Requirements": [
+        "Rcpp",
+        "SnowballC",
+        "stringi"
       ]
     },
     "tree": {

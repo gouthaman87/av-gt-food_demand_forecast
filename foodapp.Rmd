@@ -12,10 +12,10 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r, echo=FALSE, include=FALSE}
-library(patchwork)
 r_functions <- list.files(path = "R", full.names = TRUE)
 sapply(r_functions, source)
 ```
+
 
 This R Markdown document is create to check Food Demand Forecast.
 
@@ -25,39 +25,36 @@ targets::tar_load(c("complete_data", "test_results"))
 
 master_data <- complete_data[["master_data"]]
 modeltime_table <- test_results[["modeltime_table"]]
+vip_dt <- test_results[["variable_importance"]]
 test_results <- test_results[["test_results"]]
 
 statistics_fcast <- list.files(
   "./inst/extdata/statistics",
   pattern = "_tbl.csv",
   full.names = TRUE
-) |> 
+) |>
   purrr::map_dfr(~readr::read_csv(.x, show_col_types = FALSE))
 
 rm(complete_data)
 gc()
-
-# meal_id <- unique(master_data$meal_id)
-
-# center_id <- unique(master_data$center_id)
 ```
 
 ```{r transform data, echo=FALSE, warning=FALSE, message=FALSE}
-master_data <- master_data |> 
+master_data <- master_data |>
   dplyr::mutate(year = lubridate::year(date), week = lubridate::week(date))
 
-statistics_fcast <- statistics_fcast |> 
+statistics_fcast <- statistics_fcast |>
   dplyr::mutate(
-    year = lubridate::year(week_date), 
+    year = lubridate::year(week_date),
     week = lubridate::week(week_date)
-  ) |> 
-  
-  # Join Actual for Statistics Forecast 
+  ) |>
+
+  # Join Actual for Statistics Forecast
   dplyr::left_join(
     master_data |>
       dplyr::select(week, year, meal_id, center_id, num_orders, date),
     by = c("week", "year", "meal_id", "center_id")
-  ) |> 
+  ) |>
   dplyr::filter(!is.na(fc_qty)) |>
 
   dplyr::transmute(
@@ -69,25 +66,25 @@ statistics_fcast <- statistics_fcast |>
     .model_desc = .model,
     .value = fc_qty,
     num_orders
-  ) 
+  )
 
-statistics_accuracy_tbl <- statistics_fcast |> 
-  accuracy_metric() |> 
-  dplyr::group_by(meal_id, center_id) |> 
-  dplyr::filter(accuracy_rmsle == min(accuracy_rmsle)) |> 
+statistics_accuracy_tbl <- statistics_fcast |>
+  accuracy_metric() |>
+  dplyr::group_by(meal_id, center_id) |>
+  dplyr::filter(accuracy_rmsle == min(accuracy_rmsle)) |>
   dplyr::select(-accuracy_rmsle)
 
-test_results <- statistics_fcast |> 
-  dplyr::inner_join(statistics_accuracy_tbl, by = colnames(statistics_accuracy_tbl)) |> 
-  dplyr::mutate(.model_desc = "Statistics") |> 
-  dplyr::bind_rows(test_results) |> 
+test_results <- statistics_fcast |>
+  dplyr::inner_join(statistics_accuracy_tbl, by = colnames(statistics_accuracy_tbl)) |>
+  dplyr::mutate(.model_desc = "Statistics") |>
+  dplyr::bind_rows(test_results) |>
   dplyr::mutate(ts_id = paste0(center_id, "_", meal_id))
 
 report_dt <- create_report(test_results)
 
 accuracy_tbl <- test_results |>
   accuracy_metric() |>
-  dplyr::mutate(ts_id = paste0(center_id, "_", meal_id)) |> 
+  dplyr::mutate(ts_id = paste0(center_id, "_", meal_id)) |>
   dplyr::inner_join(report_dt[["common_item"]], "ts_id") |>
   dplyr::mutate(
     .model_desc = stringr::str_replace(.model_desc, "RECIPE_", ""),
@@ -108,8 +105,8 @@ model_accuracy <- accuracy_tbl |>
 
 master_data <- master_data |>
   dplyr::mutate(
-    .model_desc = "Actual", 
-    .value = num_orders, 
+    .model_desc = "Actual",
+    .value = num_orders,
     ts_id = paste0(center_id, "_", meal_id)
   ) |>
   dplyr::select(dplyr::all_of(colnames(test_results))) |>
@@ -142,16 +139,18 @@ DT::renderDataTable(
 ```
 
 ## TS Plot
-```{r raw data viz, echo=FALSE}
+```{r raw data viz, echo=FALSE, warning=FALSE}
 
-selectInput("ts_id", label = "TS ID", choices = report_dt[['common_item']]$ts_id)
+items <- report_dt[['common_item']]$ts_id
+
+shiny::selectInput("ts_id", label = "TS ID", choices = items)
 
 plotly::renderPlotly({
   master_data |>
-    dplyr::filter(ts_id == input$ts_id) |> 
+    dplyr::filter(ts_id == input$ts_id) |>
     # dplyr::filter(center_id == input$center_id, meal_id == input$meal_id) |>
     timetk::plot_time_series(
-      .date_var = date, 
+      .date_var = date,
       .value = .value,
       .smooth = FALSE,
       .color_var = .model_desc
@@ -175,22 +174,16 @@ DT::renderDataTable(
 ## Variable Importance
 ```{r vip, echo=FALSE, warning=FALSE, message=FALSE}
 
-# plt <- modeltime_table$.model_desc |>
-#   purrr::map2(
-#     .y = modeltime_table$.model_id,
-#     ~{
-#       mdl <- modeltime_table |>
-#         modeltime::pull_modeltime_model(.y)
-# 
-#       vip::vip(mdl$fit$fit) +
-#         ggplot2::theme_minimal() +
-#         ggplot2::labs(title = stringr::str_replace(.x, "RECIPE_", ""))
-#     }
-#   )
-# 
-# renderPlot(plt[[1]] + plt[[2]])
+shiny::selectInput("mod", label = NULL, choices = unique(vip_dt$Model))
+
+shiny::renderPlot({
+  vip_dt |>
+    dplyr::filter(Model == input$mod) |>
+    dplyr::mutate(Variable = forcats::fct_reorder(Variable, Importance)) |>
+
+    ggplot2::ggplot(ggplot2::aes(Variable, Importance)) +
+    ggplot2::geom_col() +
+    ggplot2::coord_flip() +
+    ggplot2::theme_minimal()
+}, res = 96)
 ```
-
-
-
-

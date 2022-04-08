@@ -9,9 +9,10 @@ model_workflow <- function(DF = is.data.frame(),
                            model_name = is.character()) {
 
   # Call Recipe ----
-  base_rec <- create_recipe(DF = DF)
+  ml_rec <- create_recipe(DF = DF) |>
+    recipes::step_rm(ts_id, date)
 
-  xgb_rec <- base_rec |>
+  xgb_rec <- ml_rec |>
     recipes::step_dummy(recipes::all_nominal(), one_hot = TRUE)
 
   # Read models ----
@@ -37,7 +38,7 @@ model_workflow <- function(DF = is.data.frame(),
 
   if(length(other_mod) > 0) {
     other_wflw <- workflowsets::workflow_set(
-      preproc = list(recipe = base_rec),
+      preproc = list(recipe = ml_rec),
       models = other_mod
     )
   } else other_wflw = NULL
@@ -95,6 +96,35 @@ accuracy_metric <- function(DF) {
 }
 
 
+#' Title
+#'
+#' @param modeltime_table
+#'
+#' @return
+#' @export
+#'
+#' @examples
+create_vip_dt <- function(modeltime_table) {
+
+  modeltime_table$.model_desc |>
+    purrr::map2_dfr(
+      .y = modeltime_table$.model_id,
+      ~{
+        mdl <- modeltime_table |>
+          modeltime::pull_modeltime_model(.y)
+
+        safe_vi <- purrr::possibly(
+          vip::vi,
+          otherwise = dplyr::tribble(~"Variable", ~"Importance")
+        )
+
+        safe_vi(mdl$fit$fit, scale = TRUE) |>
+          dplyr::mutate(Model = stringr::str_replace(.x, "RECIPE_", ""))
+      }
+    )
+}
+
+
 #' Creates forecast values
 #'
 #' This function join all the model workflow functions
@@ -135,12 +165,11 @@ meal_forecast <- function(
   fcast_values <- fitted_wflw_set |>
     forecast_values(DF = splt[["test_data"]])
 
-  # accuracy_tbl <- accuracy_metric(DF = fcast_values)
+  vip_dt <- create_vip_dt(fitted_wflw_set)
 
   list(
-    modeltime_table = fitted_wflw_set,
+    variable_importance = vip_dt,
     test_results = fcast_values
-    # accuracy_tbl = accuracy_tbl
   )
 }
 
