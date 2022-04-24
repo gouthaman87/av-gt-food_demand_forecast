@@ -11,179 +11,179 @@ resource_files:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r, echo=FALSE, include=FALSE}
+```{r add target functions, echo=FALSE, include=FALSE}
 r_functions <- list.files(path = "R", full.names = TRUE)
 sapply(r_functions, source)
 ```
 
 
-This R Markdown document is create to check Food Demand Forecast.
+<!-- This R Markdown document is create to check Food Demand Forecast. -->
 
-## Read Data & Transform
-```{r read data, echo=FALSE, include=FALSE, warning=FALSE, message=FALSE}
-targets::tar_load(c("complete_data", "test_results"))
+<!-- ## Read Data & Transform -->
+<!-- ```{r read data, echo=FALSE, include=FALSE, warning=FALSE, message=FALSE} -->
+<!-- targets::tar_load(c("complete_data", "test_results")) -->
 
-master_data <- complete_data[["master_data"]]
-modeltime_table <- test_results[["modeltime_table"]]
-vip_dt <- test_results[["variable_importance"]]
-test_results <- test_results[["test_results"]]
+<!-- master_data <- complete_data[["master_data"]] -->
+<!-- modeltime_table <- test_results[["modeltime_table"]] -->
+<!-- vip_dt <- test_results[["variable_importance"]] -->
+<!-- test_results <- test_results[["test_results"]] -->
 
-statistics_fcast <- list.files(
-  "./inst/extdata/statistics",
-  pattern = "_tbl.csv",
-  full.names = TRUE
-) |>
-  purrr::map_dfr(~readr::read_csv(.x, show_col_types = FALSE))
+<!-- statistics_fcast <- list.files( -->
+<!--   "./inst/extdata/statistics", -->
+<!--   pattern = "_tbl.csv", -->
+<!--   full.names = TRUE -->
+<!-- ) |> -->
+<!--   purrr::map_dfr(~readr::read_csv(.x, show_col_types = FALSE)) -->
 
-rm(complete_data)
-gc()
-```
+<!-- rm(complete_data) -->
+<!-- gc() -->
+<!-- ``` -->
 
-```{r transform data, echo=FALSE, warning=FALSE, message=FALSE}
-master_data <- master_data |>
-  dplyr::mutate(year = lubridate::year(date), week = lubridate::week(date))
+<!-- ```{r transform data, echo=FALSE, warning=FALSE, message=FALSE} -->
+<!-- master_data <- master_data |> -->
+<!--   dplyr::mutate(year = lubridate::year(date), week = lubridate::week(date)) -->
 
-statistics_fcast <- statistics_fcast |>
-  dplyr::mutate(
-    year = lubridate::year(week_date),
-    week = lubridate::week(week_date)
-  ) |>
+<!-- statistics_fcast <- statistics_fcast |> -->
+<!--   dplyr::mutate( -->
+<!--     year = lubridate::year(week_date), -->
+<!--     week = lubridate::week(week_date) -->
+<!--   ) |> -->
 
-  # Join Actual for Statistics Forecast
-  dplyr::left_join(
-    master_data |>
-      dplyr::select(week, year, meal_id, center_id, num_orders, date),
-    by = c("week", "year", "meal_id", "center_id")
-  ) |>
-  dplyr::filter(!is.na(fc_qty)) |>
+<!--   # Join Actual for Statistics Forecast -->
+<!--   dplyr::left_join( -->
+<!--     master_data |> -->
+<!--       dplyr::select(week, year, meal_id, center_id, num_orders, date), -->
+<!--     by = c("week", "year", "meal_id", "center_id") -->
+<!--   ) |> -->
+<!--   dplyr::filter(!is.na(fc_qty)) |> -->
 
-  dplyr::transmute(
-    date,
-    week,
-    year,
-    meal_id,
-    center_id,
-    .model_desc = .model,
-    .value = fc_qty,
-    num_orders
-  )
+<!--   dplyr::transmute( -->
+<!--     date, -->
+<!--     week, -->
+<!--     year, -->
+<!--     meal_id, -->
+<!--     center_id, -->
+<!--     .model_desc = .model, -->
+<!--     .value = fc_qty, -->
+<!--     num_orders -->
+<!--   ) -->
 
-statistics_accuracy_tbl <- statistics_fcast |>
-  accuracy_metric() |>
-  dplyr::group_by(meal_id, center_id) |>
-  dplyr::filter(accuracy_rmsle == min(accuracy_rmsle)) |>
-  dplyr::select(-accuracy_rmsle)
+<!-- statistics_accuracy_tbl <- statistics_fcast |> -->
+<!--   accuracy_metric() |> -->
+<!--   dplyr::group_by(meal_id, center_id) |> -->
+<!--   dplyr::filter(accuracy_rmsle == min(accuracy_rmsle)) |> -->
+<!--   dplyr::select(-accuracy_rmsle) -->
 
-test_results <- statistics_fcast |>
-  dplyr::inner_join(statistics_accuracy_tbl, by = colnames(statistics_accuracy_tbl)) |>
-  dplyr::mutate(.model_desc = "Statistics") |>
-  dplyr::bind_rows(test_results) |>
-  dplyr::mutate(ts_id = paste0(center_id, "_", meal_id))
+<!-- test_results <- statistics_fcast |> -->
+<!--   dplyr::inner_join(statistics_accuracy_tbl, by = colnames(statistics_accuracy_tbl)) |> -->
+<!--   dplyr::mutate(.model_desc = "Statistics") |> -->
+<!--   dplyr::bind_rows(test_results) |> -->
+<!--   dplyr::mutate(ts_id = paste0(center_id, "_", meal_id)) -->
 
-report_dt <- create_report(test_results)
+<!-- report_dt <- create_report(test_results) -->
 
-accuracy_tbl <- test_results |>
-  accuracy_metric() |>
-  dplyr::mutate(ts_id = paste0(center_id, "_", meal_id)) |>
-  dplyr::inner_join(report_dt[["common_item"]], "ts_id") |>
-  dplyr::mutate(
-    .model_desc = stringr::str_replace(.model_desc, "RECIPE_", ""),
-     accuracy_rmsle = round(accuracy_rmsle, 2)
-  )
+<!-- accuracy_tbl <- test_results |> -->
+<!--   accuracy_metric() |> -->
+<!--   dplyr::mutate(ts_id = paste0(center_id, "_", meal_id)) |> -->
+<!--   dplyr::inner_join(report_dt[["common_item"]], "ts_id") |> -->
+<!--   dplyr::mutate( -->
+<!--     .model_desc = stringr::str_replace(.model_desc, "RECIPE_", ""), -->
+<!--      accuracy_rmsle = round(accuracy_rmsle, 2) -->
+<!--   ) -->
 
-model_accuracy <- accuracy_tbl |>
-  dplyr::left_join(
-    master_data |>
-      dplyr::distinct(center_id, meal_id, base_price),
-    by = c("center_id", "meal_id")
-  ) |>
-  dplyr::with_groups(
-    .model_desc,
-    dplyr::summarise,
-    WRMSLE = round(weighted.mean(accuracy_rmsle, base_price), 2)
-  )
+<!-- model_accuracy <- accuracy_tbl |> -->
+<!--   dplyr::left_join( -->
+<!--     master_data |> -->
+<!--       dplyr::distinct(center_id, meal_id, base_price), -->
+<!--     by = c("center_id", "meal_id") -->
+<!--   ) |> -->
+<!--   dplyr::with_groups( -->
+<!--     .model_desc, -->
+<!--     dplyr::summarise, -->
+<!--     WRMSLE = round(weighted.mean(accuracy_rmsle, base_price), 2) -->
+<!--   ) -->
 
-master_data <- master_data |>
-  dplyr::mutate(
-    .model_desc = "Actual",
-    .value = num_orders,
-    ts_id = paste0(center_id, "_", meal_id)
-  ) |>
-  dplyr::select(dplyr::all_of(colnames(test_results))) |>
-  dplyr::bind_rows(test_results)
-```
+<!-- master_data <- master_data |> -->
+<!--   dplyr::mutate( -->
+<!--     .model_desc = "Actual", -->
+<!--     .value = num_orders, -->
+<!--     ts_id = paste0(center_id, "_", meal_id) -->
+<!--   ) |> -->
+<!--   dplyr::select(dplyr::all_of(colnames(test_results))) |> -->
+<!--   dplyr::bind_rows(test_results) -->
+<!-- ``` -->
 
-## Report:
-```{r, echo=FALSE}
-shiny::renderText(glue::glue("Total Number of Items: {report_dt[['N']]}"))
-shiny::renderText(glue::glue("Statistics Items: {report_dt[['S']]}"))
-shiny::renderText(glue::glue("ML Items: {report_dt[['M']]}"))
-shiny::renderText(glue::glue("Common Items: {nrow(report_dt[['common_item']])}"))
-```
-
-
-## Accuracy Table
-```{r meal accuracy metric, echo=FALSE}
-DT::renderDataTable(
-  accuracy_tbl |>
-    tidyr::pivot_wider(
-      dplyr::ends_with("_id"),
-      values_from = accuracy_rmsle,
-      names_from = .model_desc
-    ) |>
-    DT::datatable(
-      class = 'cell-border stripe',
-      rownames = FALSE
-    )
-)
-```
-
-## TS Plot
-```{r raw data viz, echo=FALSE, warning=FALSE}
-
-items <- report_dt[['common_item']]$ts_id
-
-shiny::selectInput("ts_id", label = "TS ID", choices = items)
-
-plotly::renderPlotly({
-  master_data |>
-    dplyr::filter(ts_id == input$ts_id) |>
-    # dplyr::filter(center_id == input$center_id, meal_id == input$meal_id) |>
-    timetk::plot_time_series(
-      .date_var = date,
-      .value = .value,
-      .smooth = FALSE,
-      .color_var = .model_desc
-    )
-})
-```
+<!-- ## Report: -->
+<!-- ```{r, echo=FALSE} -->
+<!-- shiny::renderText(glue::glue("Total Number of Items: {report_dt[['N']]}")) -->
+<!-- shiny::renderText(glue::glue("Statistics Items: {report_dt[['S']]}")) -->
+<!-- shiny::renderText(glue::glue("ML Items: {report_dt[['M']]}")) -->
+<!-- shiny::renderText(glue::glue("Common Items: {nrow(report_dt[['common_item']])}")) -->
+<!-- ``` -->
 
 
-## WRMSLE: Model Accuracy
-```{r model accuracy, echo=FALSE}
-DT::renderDataTable(
-  model_accuracy |>
-    DT::datatable(
-      class = 'cell-border stripe',
-      rownames = FALSE
-    )
-)
-```
+<!-- ## Accuracy Table -->
+<!-- ```{r meal accuracy metric, echo=FALSE} -->
+<!-- DT::renderDataTable( -->
+<!--   accuracy_tbl |> -->
+<!--     tidyr::pivot_wider( -->
+<!--       dplyr::ends_with("_id"), -->
+<!--       values_from = accuracy_rmsle, -->
+<!--       names_from = .model_desc -->
+<!--     ) |> -->
+<!--     DT::datatable( -->
+<!--       class = 'cell-border stripe', -->
+<!--       rownames = FALSE -->
+<!--     ) -->
+<!-- ) -->
+<!-- ``` -->
+
+<!-- ## TS Plot -->
+<!-- ```{r raw data viz, echo=FALSE, warning=FALSE} -->
+
+<!-- items <- report_dt[['common_item']]$ts_id -->
+
+<!-- shiny::selectInput("ts_id", label = "TS ID", choices = items) -->
+
+<!-- plotly::renderPlotly({ -->
+<!--   master_data |> -->
+<!--     dplyr::filter(ts_id == input$ts_id) |> -->
+<!--     # dplyr::filter(center_id == input$center_id, meal_id == input$meal_id) |> -->
+<!--     timetk::plot_time_series( -->
+<!--       .date_var = date, -->
+<!--       .value = .value, -->
+<!--       .smooth = FALSE, -->
+<!--       .color_var = .model_desc -->
+<!--     ) -->
+<!-- }) -->
+<!-- ``` -->
 
 
-## Variable Importance
-```{r vip, echo=FALSE, warning=FALSE, message=FALSE}
+<!-- ## WRMSLE: Model Accuracy -->
+<!-- ```{r model accuracy, echo=FALSE} -->
+<!-- DT::renderDataTable( -->
+<!--   model_accuracy |> -->
+<!--     DT::datatable( -->
+<!--       class = 'cell-border stripe', -->
+<!--       rownames = FALSE -->
+<!--     ) -->
+<!-- ) -->
+<!-- ``` -->
 
-shiny::selectInput("mod", label = NULL, choices = unique(vip_dt$Model))
 
-shiny::renderPlot({
-  vip_dt |>
-    dplyr::filter(Model == input$mod) |>
-    dplyr::mutate(Variable = forcats::fct_reorder(Variable, Importance)) |>
+<!-- ## Variable Importance -->
+<!-- ```{r vip, echo=FALSE, warning=FALSE, message=FALSE} -->
 
-    ggplot2::ggplot(ggplot2::aes(Variable, Importance)) +
-    ggplot2::geom_col() +
-    ggplot2::coord_flip() +
-    ggplot2::theme_minimal()
-}, res = 96)
-```
+<!-- shiny::selectInput("mod", label = NULL, choices = unique(vip_dt$Model)) -->
+
+<!-- shiny::renderPlot({ -->
+<!--   vip_dt |> -->
+<!--     dplyr::filter(Model == input$mod) |> -->
+<!--     dplyr::mutate(Variable = forcats::fct_reorder(Variable, Importance)) |> -->
+
+<!--     ggplot2::ggplot(ggplot2::aes(Variable, Importance)) + -->
+<!--     ggplot2::geom_col() + -->
+<!--     ggplot2::coord_flip() + -->
+<!--     ggplot2::theme_minimal() -->
+<!-- }, res = 96) -->
+<!-- ``` -->
