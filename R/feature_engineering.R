@@ -30,9 +30,9 @@ ts_split <- function(DF = is.data.frame()) {
 create_recipe <- function(DF) {
 
   file_path <- file.path(glue::glue("{here::here()}/parameters.yaml"))
-  features <- unlist(yaml::read_yaml(file = file_path))
+  # features <- unlist(yaml::read_yaml(file = file_path))
 
-  remove_columns <- setdiff(colnames(DF), c(features, "ts_id", "num_orders"))
+  # remove_columns <- setdiff(colnames(DF), c(features, "ts_id", "num_orders"))
 
   recipes::recipe(num_orders ~ ., data = DF) |>
 
@@ -70,9 +70,9 @@ create_recipe <- function(DF) {
     #   else x
     # }() |>
 
-    recipes::step_zv() |>
+    recipes::step_zv()
 
-    recipes::step_rm(dplyr::all_of(remove_columns))
+    # recipes::step_rm(dplyr::all_of(remove_columns))
 
   #   # step_group_lag(dplyr::ends_with("_id"))
 }
