@@ -3,7 +3,7 @@
 #' `step_demand_cate` creates a *specification* of a recipe
 #'  step that will creates demand categorization based on SBC method.
 #'
-#' @inheritParams step_demand_cate
+#' @inheritParams step_group_lag
 #' @param demand_cate_table Demand categorization table. This is
 #'  `NULL` until computed by [prep()].
 #' @export

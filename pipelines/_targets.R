@@ -7,7 +7,7 @@ sapply(r_functions, source)
 options(tidyverse.quiet = TRUE)
 
 tar_option_set(
-  packages = c("h2oparsnip", "treesnip", "modeltime.gluonts")
+  packages = c("agua", "bonsai")
 )
 
 list(
@@ -33,7 +33,7 @@ list(
   # 2.0 Read raw data ----
   targets::tar_target(
     data_list,
-    read_raw_data(
+    init_raw_data(
       train_raw_path = train_raw_path,
       test_raw_path = test_raw_path,
       meal_info_path = meal_info_path
@@ -43,15 +43,16 @@ list(
   # 3.0 Initialize Data ----
   targets::tar_target(
     complete_data,
-    data_prepare(data_list = data_list)
+    init_prepare(data_list = data_list)
   ),
 
   # 4.0 Run Test Data Forecast ----
   targets::tar_target(
     test_results,
-    meal_forecast(
+    init_forecast(
       DF = complete_data[["master_data"]],
-      model_name = c("h2o_gbm", "h2o_rf", "lgbm")
+      # model_name = c("h2o_gbm", "h2o_rf", "lgbm")
+      model_name = "h2o_rf"
     )
   )
 )
